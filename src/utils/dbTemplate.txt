@@ -1,0 +1,7 @@
+CREATE TABLE links (
+    id SERIAL PRIMARY KEY,
+    code VARCHAR(20) UNIQUE,
+    url TEXT NOT NULL,
+    clicks INT DEFAULT 0,
+    isOnline BOOLEAN DEFAULT TRUE
+);

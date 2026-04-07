@@ -3,7 +3,7 @@ const { Pool } = require("pg")
 const pool = new Pool({
   user: "heitor",
   host: "localhost",
-  database: "encurtaApi",
+  database: "encurtaapi",
   password: "",
   port: 5432
 })
