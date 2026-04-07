@@ -1,11 +1,15 @@
-const { Pool } = require("pg")
+import pg from "pg";
+import dotenv from "dotenv";
+
+dotenv.config();
+const { Pool } = pg;
 
 const pool = new Pool({
   user: "heitor",
   host: "localhost",
   database: "encurtaapi",
-  password: "",
-  port: 5432
-})
+  password: process.env.DB_PASSWORD,
+  port: 5432,
+});
 
-module.exports = pool
+export default pool;

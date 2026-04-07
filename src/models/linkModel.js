@@ -1,4 +1,4 @@
-class link {
+class linkModel {
     constructor(code, url, isOnline,clicks){
         this.code
         this.url
@@ -7,4 +7,4 @@ class link {
     }
 }
 
-module.exports = link
+module.exports = linkModel
