@@ -3,104 +3,545 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Encurtador de URLs</title>
-    <!-- Bootstrap 5 + ícones + tema escuro (opcional) -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <title>Encurtador de URLs | LinkMaster</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             min-height: 100vh;
-            padding: 2rem 1rem;
+            color: #fff;
+            position: relative;
+            overflow-x: hidden;
         }
-        .card-glass {
+
+        /* Partículas de fundo animadas */
+        body::before {
+            content: '';
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(119, 198, 255, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .logo {
+            font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo i {
+            background: none;
+            -webkit-background-clip: unset;
+            background-clip: unset;
+            color: #667eea;
+        }
+
+        .subtitle {
+            color: #a0aec0;
+            margin-top: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        /* Card principal */
+        .card {
             background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(10px);
+            border-radius: 2rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInUp 0.8s ease;
         }
-        .table-dark-custom {
-            --bs-table-bg: rgba(0, 0, 0, 0.2);
-            --bs-table-hover-bg: rgba(255, 255, 255, 0.05);
-            color: #e2e8f0;
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
         }
+
+        /* Input group */
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .url-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 1rem 1.5rem;
+            font-size: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .url-input::placeholder {
+            color: #718096;
+        }
+
+        .btn-primary {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: inherit;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Resultado */
+        .result-box {
+            margin-top: 2rem;
+            padding: 1rem;
+            border-radius: 1rem;
+            background: rgba(102, 126, 234, 0.1);
+            border-left: 4px solid #667eea;
+            animation: slideIn 0.5s ease;
+        }
+
+        .success-alert {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .short-url {
+            flex: 1;
+            font-size: 1.1rem;
+        }
+
         .short-url a {
             color: #90dfff;
             text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
         }
+
         .short-url a:hover {
+            color: #667eea;
             text-decoration: underline;
         }
-        .badge-code {
+
+        .btn-copy {
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 0.5rem;
+            color: #fff;
             cursor: pointer;
-            background-color: #6c5ce7;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: inherit;
         }
-        .badge-code:hover {
-            background-color: #5b4bc4;
+
+        .btn-copy:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
         }
-        footer {
-            color: #64748b;
+
+        .error-alert {
+            background: rgba(245, 92, 92, 0.1);
+            border-left: 4px solid #f55c5c;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            color: #f55c5c;
+        }
+
+        /* Header da tabela */
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .table-header h2 {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-refresh {
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: inherit;
+        }
+
+        .btn-refresh:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(180deg);
+            transition: transform 0.5s ease;
+        }
+
+        /* Tabela */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 1rem;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .links-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .links-table thead {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .links-table th {
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: #a0aec0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .links-table td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .links-table tbody tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transition: background 0.3s ease;
+        }
+
+        .url-cell {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .code-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 0.3rem 0.8rem;
+            border-radius: 0.5rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .code-badge:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        .link-cell a {
+            color: #90dfff;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .link-cell a:hover {
+            color: #667eea;
+        }
+
+        .clicks-badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.3rem 0.6rem;
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+            display: inline-block;
+        }
+
+        .btn-icon {
+            padding: 0.3rem 0.6rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            border-radius: 0.5rem;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-icon:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: scale(1.1);
+        }
+
+        /* Loading */
+        .loading {
             text-align: center;
-            margin-top: 2rem;
+            padding: 3rem;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #a0aec0;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+
+        /* Animações */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .card {
+                padding: 1.5rem;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            .btn-primary {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .table-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn-refresh {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .url-cell {
+                max-width: 200px;
+            }
+
+            .links-table th,
+            .links-table td {
+                padding: 0.75rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Scrollbar customizada */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.5);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.8);
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <!-- CARD PRINCIPAL - CRIAR LINK -->
-    <div class="card card-glass mb-4 shadow">
-        <div class="card-body p-4 p-md-5">
-            <h1 class="display-5 fw-bold text-center mb-2" style="background: linear-gradient(135deg, #c084fc, #60a5fa); -webkit-background-clip: text; background-clip: text; color: transparent;">
-                🔗 Encurtador de URLs
-            </h1>
-            <p class="text-center text-secondary mb-4">Cole uma URL longa e gere um link curto e rastreável</p>
-
-            <div class="row justify-content-center">
-                <div class="col-md-8">
-                    <div class="input-group mb-3">
-                        <input type="url" id="longUrl" class="form-control form-control-lg" placeholder="https://exemplo.com/pagina-muito-longa">
-                        <button id="shortenBtn" class="btn btn-primary btn-lg px-4">
-                            <i class="bi bi-link-45deg"></i> Encurtar
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Área de resultado -->
-            <div id="resultBox" class="mt-4" style="display: none;">
-                <div class="alert alert-success d-flex align-items-center justify-content-between flex-wrap gap-2" role="alert">
-                    <div class="short-url" id="shortLinkContainer">
-                        <!-- link gerado aparecerá aqui -->
-                    </div>
-                    <button class="btn btn-sm btn-outline-light" onclick="copyToClipboard(document.getElementById('shortLinkContainer').innerText.match(/https?:\/\/[^\s]+/)?.[0] || '')">
-                        <i class="bi bi-clipboard"></i> Copiar
-                    </button>
-                </div>
-                <div id="errorMsg" class="alert alert-danger" style="display: none;"></div>
-            </div>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">
+            <i class="fas fa-link"></i>
+            <span>LinkMaster</span>
         </div>
+        <p class="subtitle">Encurte, compartilhe e monitore seus links em um só lugar</p>
     </div>
 
-    <!-- CARD LISTA DE LINKS COM BOTÃO ATUALIZAR -->
-    <div class="card card-glass shadow">
-        <div class="card-body p-4">
-            <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
-                <h2 class="h4 mb-0"><i class="bi bi-table"></i> Todos os links</h2>
-                <button id="refreshBtn" class="btn btn-outline-info btn-sm">
-                    <i class="bi bi-arrow-repeat"></i> Atualizar
+    <!-- Card principal - Criar link -->
+    <div class="card">
+        <div class="input-group">
+            <input type="url" id="longUrl" class="url-input" placeholder="https://exemplo.com/pagina-muito-longa...">
+            <button id="shortenBtn" class="btn-primary">
+                <i class="fas fa-magic"></i>
+                Encurtar Link
+            </button>
+        </div>
+
+        <!-- Área de resultado -->
+        <div id="resultBox" class="result-box" style="display: none;">
+            <div id="successBox" class="success-alert">
+                <div class="short-url" id="shortLinkContainer"></div>
+                <button class="btn-copy" onclick="copyToClipboard(getShortLinkText())">
+                    <i class="fas fa-copy"></i>
+                    Copiar
                 </button>
             </div>
-            <div id="linksList">
-                <div class="text-center py-4 text-secondary">
-                    <div class="spinner-border text-info" role="status"></div>
-                    <p class="mt-2">Carregando links...</p>
-                </div>
+            <div id="errorMsg" class="error-alert" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- Card lista de links -->
+    <div class="card">
+        <div class="table-header">
+            <h2>
+                <i class="fas fa-chart-line"></i>
+                Todos os Links
+            </h2>
+            <button id="refreshBtn" class="btn-refresh">
+                <i class="fas fa-sync-alt"></i>
+                Atualizar
+            </button>
+        </div>
+        <div id="linksList">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p>Carregando seus links...</p>
             </div>
         </div>
     </div>
-    <footer>
-        ✅ Clique no código ou no link curto para visitar | Os cliques são contados automaticamente
-    </footer>
+
+    <div class="footer">
+        <p>
+            <i class="fas fa-mouse-pointer"></i> Clique no código ou no link curto para visitar | 
+            <i class="fas fa-chart-simple"></i> Os cliques são contados automaticamente
+        </p>
+    </div>
 </div>
 
 <script>
@@ -110,6 +551,7 @@
     const resultBox = document.getElementById('resultBox');
     const shortLinkContainer = document.getElementById('shortLinkContainer');
     const errorMsgDiv = document.getElementById('errorMsg');
+    const successBox = document.getElementById('successBox');
     const linksListDiv = document.getElementById('linksList');
     const refreshBtn = document.getElementById('refreshBtn');
 
@@ -145,29 +587,64 @@
         return `${window.location.origin}/${code}`;
     }
 
+    function getShortLinkText() {
+        const link = shortLinkContainer.querySelector('a');
+        return link ? link.href : '';
+    }
+
     // Renderizar tabela de links
     async function renderLinksList() {
         try {
-            linksListDiv.innerHTML = '<div class="text-center py-4 text-secondary"><div class="spinner-border text-info"></div><p class="mt-2">Atualizando...</p></div>';
+            linksListDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Atualizando...</p></div>';
             const links = await fetchAllLinks();
+            
             if (!links || links.length === 0) {
-                linksListDiv.innerHTML = '<div class="alert alert-secondary text-center">Nenhum link encurtado ainda. Crie o primeiro!</div>';
+                linksListDiv.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-inbox"></i>
+                        <p>Nenhum link encurtado ainda</p>
+                        <p style="font-size: 0.9rem;">Crie seu primeiro link acima! 🚀</p>
+                    </div>
+                `;
                 return;
             }
+
             const tableHtml = `
-                <div class="table-responsive">
-                    <table class="table table-dark-custom table-hover align-middle">
+                <div class="table-container">
+                    <table class="links-table">
                         <thead>
-                            <tr><th>URL Original</th><th>Código</th><th>Link Curto</th><th>Cliques</th><th>Ações</th></tr>
+                            <tr>
+                                <th>URL Original</th>
+                                <th>Código</th>
+                                <th>Link Curto</th>
+                                <th>Cliques</th>
+                                <th>Ações</th>
+                            </tr>
                         </thead>
                         <tbody>
                             ${links.map(link => `
                                 <tr>
-                                    <td title="${escapeHtml(link.url)}" style="max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(truncate(link.url, 55))}</td>
-                                    <td><span class="badge badge-code" onclick="copyToClipboard('${link.code}')" style="cursor:pointer;">${escapeHtml(link.code)}</span></td>
-                                    <td><a href="${getShortUrl(link.code)}" target="_blank" class="text-info">${escapeHtml(truncate(getShortUrl(link.code), 40))}</a></td>
-                                    <td><span class="badge bg-secondary">${link.clicks || 0}</span></td>
-                                    <td><button class="btn btn-sm btn-outline-light" onclick="copyToClipboard('${getShortUrl(link.code)}')"><i class="bi bi-files"></i></button></td>
+                                    <td class="url-cell" title="${escapeHtml(link.url)}">${escapeHtml(truncate(link.url, 55))}</td>
+                                    <td>
+                                        <span class="code-badge" onclick="copyToClipboard('${link.code}')" title="Clique para copiar o código">
+                                            ${escapeHtml(link.code)}
+                                        </span>
+                                    </td>
+                                    <td class="link-cell">
+                                        <a href="${getShortUrl(link.code)}" target="_blank" title="Abrir link curto">
+                                            ${escapeHtml(truncate(getShortUrl(link.code), 40))}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span class="clicks-badge">
+                                            <i class="fas fa-chart-simple"></i> ${link.clicks || 0}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn-icon" onclick="copyToClipboard('${getShortUrl(link.code)}')" title="Copiar link curto">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -177,12 +654,21 @@
             linksListDiv.innerHTML = tableHtml;
         } catch (error) {
             console.error(error);
-            linksListDiv.innerHTML = `<div class="alert alert-danger">❌ Erro ao carregar links: ${error.message}</div>`;
+            linksListDiv.innerHTML = `
+                <div class="error-alert">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Erro ao carregar links: ${escapeHtml(error.message)}
+                </div>
+            `;
         }
     }
 
     // Utilitários
-    function truncate(str, len) { return str.length <= len ? str : str.slice(0, len) + '…'; }
+    function truncate(str, len) { 
+        if (!str) return '';
+        return str.length <= len ? str : str.slice(0, len) + '…'; 
+    }
+    
     function escapeHtml(str) {
         if (!str) return '';
         return str.replace(/[&<>]/g, function(m) {
@@ -197,7 +683,21 @@
         if (!text) return;
         try {
             await navigator.clipboard.writeText(text);
-            alert(`✅ Copiado: ${text}`);
+            // Feedback visual temporário
+            const notification = document.createElement('div');
+            notification.textContent = `✅ Copiado: ${text}`;
+            notification.style.position = 'fixed';
+            notification.style.bottom = '20px';
+            notification.style.right = '20px';
+            notification.style.background = 'rgba(102, 126, 234, 0.9)';
+            notification.style.color = '#fff';
+            notification.style.padding = '0.75rem 1.5rem';
+            notification.style.borderRadius = '0.5rem';
+            notification.style.fontSize = '0.9rem';
+            notification.style.zIndex = '1000';
+            notification.style.animation = 'fadeInUp 0.3s ease';
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 2000);
         } catch (err) {
             prompt("Copie manualmente:", text);
         }
@@ -205,47 +705,68 @@
 
     function showShortResult(linkData) {
         const shortUrl = getShortUrl(linkData.code);
-        shortLinkContainer.innerHTML = `<strong>🔗 Link encurtado:</strong> <a href="${shortUrl}" target="_blank">${escapeHtml(shortUrl)}</a> <span class="badge bg-info ms-2">código: ${linkData.code}</span>`;
+        shortLinkContainer.innerHTML = `
+            <i class="fas fa-check-circle" style="color: #48bb78;"></i>
+            <strong>Link encurtado com sucesso!</strong><br>
+            <a href="${shortUrl}" target="_blank">${escapeHtml(shortUrl)}</a>
+            <span style="font-size: 0.85rem; opacity: 0.8;">código: ${linkData.code}</span>
+        `;
         errorMsgDiv.style.display = 'none';
+        successBox.style.display = 'flex';
         resultBox.style.display = 'block';
         resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        
+        // Limpar o input
+        longUrlInput.value = '';
     }
 
     function showError(message) {
-        errorMsgDiv.textContent = `❌ ${message}`;
+        errorMsgDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${escapeHtml(message)}`;
         errorMsgDiv.style.display = 'block';
-        shortLinkContainer.innerHTML = '';
+        successBox.style.display = 'none';
         resultBox.style.display = 'block';
     }
 
     // Eventos
     shortenBtn.addEventListener('click', async () => {
         let url = longUrlInput.value.trim();
-        if (!url) { showError('Digite uma URL válida'); return; }
-        if (!url.startsWith('http://') && !url.startsWith('https://')) url = 'https://' + url;
+        if (!url) { 
+            showError('Digite uma URL válida'); 
+            longUrlInput.focus();
+            return; 
+        }
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+            url = 'https://' + url;
+        }
+        
         shortenBtn.disabled = true;
-        shortenBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Encurtando...';
+        const originalText = shortenBtn.innerHTML;
+        shortenBtn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Encurtando...';
+        
         try {
             const link = await createShortLink(url);
             showShortResult(link);
-            longUrlInput.value = '';
             await renderLinksList();
-        } catch (err) { showError(err.message); }
-        finally {
+        } catch (err) { 
+            showError(err.message); 
+        } finally {
             shortenBtn.disabled = false;
-            shortenBtn.innerHTML = '<i class="bi bi-link-45deg"></i> Encurtar';
+            shortenBtn.innerHTML = originalText;
         }
     });
 
     refreshBtn.addEventListener('click', () => renderLinksList());
-    longUrlInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') shortenBtn.click(); });
+    longUrlInput.addEventListener('keypress', (e) => { 
+        if (e.key === 'Enter') shortenBtn.click(); 
+    });
 
     // Inicializa
     renderLinksList();
 
     // Auto-refresh a cada 30s
-    setInterval(() => { if (document.visibilityState === 'visible') renderLinksList(); }, 30000);
+    setInterval(() => { 
+        if (document.visibilityState === 'visible') renderLinksList(); 
+    }, 30000);
 </script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
