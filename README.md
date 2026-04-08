@@ -218,3 +218,7 @@ id: 3844   → code: "100"
 | `DB_PASSWORD` | PostgreSQL password        |
 
 > The host is hardcoded as `localhost` and the database as `encurtaapi`. Change these in `src/config/db.js` if needed.
+
+## Screenshots
+
+![Página inicial](/print.png)
