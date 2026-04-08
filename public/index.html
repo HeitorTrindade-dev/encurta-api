@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encurtador de URLs</title>
+    <!-- Bootstrap 5 + ícones + tema escuro (opcional) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+        .card-glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+        }
+        .table-dark-custom {
+            --bs-table-bg: rgba(0, 0, 0, 0.2);
+            --bs-table-hover-bg: rgba(255, 255, 255, 0.05);
+            color: #e2e8f0;
+        }
+        .short-url a {
+            color: #90dfff;
+            text-decoration: none;
+        }
+        .short-url a:hover {
+            text-decoration: underline;
+        }
+        .badge-code {
+            cursor: pointer;
+            background-color: #6c5ce7;
+        }
+        .badge-code:hover {
+            background-color: #5b4bc4;
+        }
+        footer {
+            color: #64748b;
+            text-align: center;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- CARD PRINCIPAL - CRIAR LINK -->
+    <div class="card card-glass mb-4 shadow">
+        <div class="card-body p-4 p-md-5">
+            <h1 class="display-5 fw-bold text-center mb-2" style="background: linear-gradient(135deg, #c084fc, #60a5fa); -webkit-background-clip: text; background-clip: text; color: transparent;">
+                🔗 Encurtador de URLs
+            </h1>
+            <p class="text-center text-secondary mb-4">Cole uma URL longa e gere um link curto e rastreável</p>
+
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <div class="input-group mb-3">
+                        <input type="url" id="longUrl" class="form-control form-control-lg" placeholder="https://exemplo.com/pagina-muito-longa">
+                        <button id="shortenBtn" class="btn btn-primary btn-lg px-4">
+                            <i class="bi bi-link-45deg"></i> Encurtar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Área de resultado -->
+            <div id="resultBox" class="mt-4" style="display: none;">
+                <div class="alert alert-success d-flex align-items-center justify-content-between flex-wrap gap-2" role="alert">
+                    <div class="short-url" id="shortLinkContainer">
+                        <!-- link gerado aparecerá aqui -->
+                    </div>
+                    <button class="btn btn-sm btn-outline-light" onclick="copyToClipboard(document.getElementById('shortLinkContainer').innerText.match(/https?:\/\/[^\s]+/)?.[0] || '')">
+                        <i class="bi bi-clipboard"></i> Copiar
+                    </button>
+                </div>
+                <div id="errorMsg" class="alert alert-danger" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARD LISTA DE LINKS COM BOTÃO ATUALIZAR -->
+    <div class="card card-glass shadow">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap mb-3">
+                <h2 class="h4 mb-0"><i class="bi bi-table"></i> Todos os links</h2>
+                <button id="refreshBtn" class="btn btn-outline-info btn-sm">
+                    <i class="bi bi-arrow-repeat"></i> Atualizar
+                </button>
+            </div>
+            <div id="linksList">
+                <div class="text-center py-4 text-secondary">
+                    <div class="spinner-border text-info" role="status"></div>
+                    <p class="mt-2">Carregando links...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer>
+        ✅ Clique no código ou no link curto para visitar | Os cliques são contados automaticamente
+    </footer>
+</div>
+
+<script>
+    // Elementos DOM
+    const longUrlInput = document.getElementById('longUrl');
+    const shortenBtn = document.getElementById('shortenBtn');
+    const resultBox = document.getElementById('resultBox');
+    const shortLinkContainer = document.getElementById('shortLinkContainer');
+    const errorMsgDiv = document.getElementById('errorMsg');
+    const linksListDiv = document.getElementById('linksList');
+    const refreshBtn = document.getElementById('refreshBtn');
+
+    // Helper: chamadas API
+    async function apiRequest(endpoint, options = {}) {
+        const url = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+        const defaultHeaders = { 'Content-Type': 'application/json' };
+        const config = { ...options, headers: { ...defaultHeaders, ...options.headers } };
+        const response = await fetch(url, config);
+        if (!response.ok) {
+            let errorText = '';
+            try {
+                const data = await response.json();
+                errorText = data.message || `Erro ${response.status}`;
+            } catch (e) {
+                errorText = `Erro ${response.status}: ${response.statusText}`;
+            }
+            throw new Error(errorText);
+        }
+        if (response.status === 204) return null;
+        return await response.json();
+    }
+
+    async function createShortLink(url) {
+        return await apiRequest('/', { method: 'POST', body: JSON.stringify({ url }) });
+    }
+
+    async function fetchAllLinks() {
+        return await apiRequest('/links');
+    }
+
+    function getShortUrl(code) {
+        return `${window.location.origin}/${code}`;
+    }
+
+    // Renderizar tabela de links
+    async function renderLinksList() {
+        try {
+            linksListDiv.innerHTML = '<div class="text-center py-4 text-secondary"><div class="spinner-border text-info"></div><p class="mt-2">Atualizando...</p></div>';
+            const links = await fetchAllLinks();
+            if (!links || links.length === 0) {
+                linksListDiv.innerHTML = '<div class="alert alert-secondary text-center">Nenhum link encurtado ainda. Crie o primeiro!</div>';
+                return;
+            }
+            const tableHtml = `
+                <div class="table-responsive">
+                    <table class="table table-dark-custom table-hover align-middle">
+                        <thead>
+                            <tr><th>URL Original</th><th>Código</th><th>Link Curto</th><th>Cliques</th><th>Ações</th></tr>
+                        </thead>
+                        <tbody>
+                            ${links.map(link => `
+                                <tr>
+                                    <td title="${escapeHtml(link.url)}" style="max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(truncate(link.url, 55))}</td>
+                                    <td><span class="badge badge-code" onclick="copyToClipboard('${link.code}')" style="cursor:pointer;">${escapeHtml(link.code)}</span></td>
+                                    <td><a href="${getShortUrl(link.code)}" target="_blank" class="text-info">${escapeHtml(truncate(getShortUrl(link.code), 40))}</a></td>
+                                    <td><span class="badge bg-secondary">${link.clicks || 0}</span></td>
+                                    <td><button class="btn btn-sm btn-outline-light" onclick="copyToClipboard('${getShortUrl(link.code)}')"><i class="bi bi-files"></i></button></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            linksListDiv.innerHTML = tableHtml;
+        } catch (error) {
+            console.error(error);
+            linksListDiv.innerHTML = `<div class="alert alert-danger">❌ Erro ao carregar links: ${error.message}</div>`;
+        }
+    }
+
+    // Utilitários
+    function truncate(str, len) { return str.length <= len ? str : str.slice(0, len) + '…'; }
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    window.copyToClipboard = async function(text) {
+        if (!text) return;
+        try {
+            await navigator.clipboard.writeText(text);
+            alert(`✅ Copiado: ${text}`);
+        } catch (err) {
+            prompt("Copie manualmente:", text);
+        }
+    };
+
+    function showShortResult(linkData) {
+        const shortUrl = getShortUrl(linkData.code);
+        shortLinkContainer.innerHTML = `<strong>🔗 Link encurtado:</strong> <a href="${shortUrl}" target="_blank">${escapeHtml(shortUrl)}</a> <span class="badge bg-info ms-2">código: ${linkData.code}</span>`;
+        errorMsgDiv.style.display = 'none';
+        resultBox.style.display = 'block';
+        resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function showError(message) {
+        errorMsgDiv.textContent = `❌ ${message}`;
+        errorMsgDiv.style.display = 'block';
+        shortLinkContainer.innerHTML = '';
+        resultBox.style.display = 'block';
+    }
+
+    // Eventos
+    shortenBtn.addEventListener('click', async () => {
+        let url = longUrlInput.value.trim();
+        if (!url) { showError('Digite uma URL válida'); return; }
+        if (!url.startsWith('http://') && !url.startsWith('https://')) url = 'https://' + url;
+        shortenBtn.disabled = true;
+        shortenBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Encurtando...';
+        try {
+            const link = await createShortLink(url);
+            showShortResult(link);
+            longUrlInput.value = '';
+            await renderLinksList();
+        } catch (err) { showError(err.message); }
+        finally {
+            shortenBtn.disabled = false;
+            shortenBtn.innerHTML = '<i class="bi bi-link-45deg"></i> Encurtar';
+        }
+    });
+
+    refreshBtn.addEventListener('click', () => renderLinksList());
+    longUrlInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') shortenBtn.click(); });
+
+    // Inicializa
+    renderLinksList();
+
+    // Auto-refresh a cada 30s
+    setInterval(() => { if (document.visibilityState === 'visible') renderLinksList(); }, 30000);
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

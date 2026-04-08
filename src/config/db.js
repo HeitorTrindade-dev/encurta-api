@@ -5,7 +5,7 @@ dotenv.config();
 const { Pool } = pg;
 
 const pool = new Pool({
-  user: "heitor",
+  user: process.env.DB_USER,
   host: "localhost",
   database: "encurtaapi",
   password: process.env.DB_PASSWORD,
