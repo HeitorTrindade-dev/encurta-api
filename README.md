@@ -1,4 +1,4 @@
-# 🔗 LinkMaster — URL Shortener
+# 🔗 encurta-API | URL Shortener
 
 A REST API for shortening URLs with automatic redirection, click tracking, and a management panel. Built with Node.js, Express, and PostgreSQL.
 
